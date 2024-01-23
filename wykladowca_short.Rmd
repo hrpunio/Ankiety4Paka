@@ -1,0 +1,375 @@
+---
+title: "Analiza jakości zajęć na Wydziale Z-Nauk"
+subtitle: "Semestr 2022--2023/lato"
+author: "Komisja ds. jakości kształcenia"
+date: "01/01/2024"
+output:
+  pdf_document:
+    keep_tex: true
+    latex_engine: lualatex
+  html_document: default
+header-includes: \usepackage{custom}
+---
+
+```{r setup, include=FALSE}
+#######################
+#######################
+### Nazwa pliku
+plikCSV <- "wykladowca.csv"
+### numer roku akademickiego
+rokAkademicki <- "2022-2023"
+### semestr
+semestr <- 'L'
+###
+kierunkiWydzialu <- c("PO", "POM", "PP", "RM" )
+wydzial <- 'Z-Nauk'
+#######################
+#######################
+### Poniżej nie ruszać
+require("ggplot2")
+require("dplyr")
+require("tidyr")
+require("stringr")
+library("knitr")
+```
+
+## Opis procedury zbierania i analizy danych
+
+Ankieta oceniająca jakość studiowania w PSW jest udostępniana
+studentom w systemie Wirtualny Dziekanat. Wypełnione ankiety są
+eksportowane do pliku w formacie CSV, a analiza statystyczna jest
+wykonywana za pomocą autorskiego programu (w języku R) stworzonego
+przez członków zespołu d/s analizy jakości.
+**Dzięki zautomatyzowaniu przetwarzania danych (w miejsce używania do tego
+celu oprogramowania biurowego) udało się znacząco obniżyć
+koszty, zmniejszyć liczbę błędów oraz zapewnić 100% powtarzalność analiz**.
+
+Wyżej wspomniana ankieta zawiera 9 zmiennych oceniających jakość zajęć
+prowadzone na PSW: `o1` -- Sposób przedstawienia treści zajęć; `o2` --
+Wykorzystanie czasu zajęć; `o3` -- Przedstawienie warunków uzyskania
+zaliczenia; `o4` -- Kompetencje merytoryczne wykładowcy do prowadzenia
+zajęć; `o5` -- Postawa wykładowcy wobec studentów; `o6` -- Dostępność
+wykładowcy dla studentów; `o7` -- Właściwy dobór zagadnień znacząco
+poszerzył moją wiedzę i umiejętności; `o8` -- Sposób prowadzenia zajęć
+umożliwiał łączenie własnej wiedzy i doświadczeń z nową wiedzą i
+umiejętnościami; `o9` -- Sposób prowadzenia zajęć umożliwiał rozwój
+kompetencji społecznych. Na każde pytanie możliwa było odpowiedź
+od bardzo źle do bardzo dobrze.
+Ponadto pytanie `o10` ocenia stopień zainteresowania
+studenta zajęciami (w skali od *uważam za bardzo mało interesujący* do
+*uważam za bardzo interesujący*)
+
+Formularz ankiety znajduje się w Załączniku.
+
+
+```{r, message=F, echo=F}
+## nazwy kryteriów
+var.names <- c("o1", "o2", "o3", "o4", "o5", "o6", "o7", "o8", "o9", "o10")
+
+## etykiety kryteriów
+var.labels <- c("przedstawienie treści", "wykorzystanie czasu",
+"warunki zaliczenia", "kompetencje merytoryczne", "postawa wykładowcy",
+"dostępność wykładowcy", "wiedza i umiejętności", "łączenie z nową wiedzą",
+"kompetencje społeczne", "interesujący?");
+
+## Dane powinny zawierać następujące kolumny (mogą zawierać więcej, ale
+## skrypt korzysta tylko z tych):
+## kierunek   = kierunek studiów
+## rok        = rok studiów 1/2/3
+## wykładowca = imię + nazwisko wykładowcy
+## przedmiot  = nazwa przedmiotu
+## typ        = typ zajęć (wykłady/ćwiczenia...)
+## miejsce    = miejsce studiowania (file/siedziba główna)
+## płeć       = płeć ankietowanego
+## o1/o10     = kryteria oceny
+##
+## select zresztą pomija nierelewantne kolumny
+d00 <- read.csv(plikCSV, sep = ';', dec = ",",  header=T, na.string="NA") %>%
+    select (wykladowca, przedmiot, typ, kierunek, rok, miejsce, płeć, 
+            o1, o2, o3, o4, o5, o6, o7, o8, o9, o10) %>%
+    mutate (kierunek = as.factor(kierunek),
+            typ = as.factor(typ),
+            miejsce = as.factor(miejsce),
+            o1 = as.factor(o1),
+            o2 = as.factor(o2),
+            o3 = as.factor(o3),
+            o4 = as.factor(o4),
+            o5 = as.factor(o5),
+            o6 = as.factor(o6),
+            o7 = as.factor(o7),
+            o8 = as.factor(o8),
+            o9 = as.factor(o9),
+            o10 = as.factor(o10)
+            );
+
+# Tylko dane dla określonego w nagłówku wydziału
+d <- d00 %>% filter(kierunek %in% kierunkiWydzialu) 
+
+# liczba ankiet ogółem
+liczba_ankiet <- nrow(d)
+
+## w podziale na lata studiów oraz miejsce
+ankiety_lata <- d %>% group_by (rok) %>% summarise(s = n())
+ankiety_miejsca <- d %>% group_by (miejsce) %>% summarise(s = n())
+
+## w podziale na wykładowców i zajęcia przez nich prowadzone
+## nazwa przedmiotu/liczba ocen
+przedmioty_prowadzacy <- d %>% group_by(wykladowca, typ, przedmiot) %>% 
+  summarise ( oceny = n())
+```
+
+## Analiza wstępna danych
+
+Łączna zebrano `r  liczba_ankiet ` ankiet.  Zestawienie w podziale 
+na liczbę ankiet wg lat studiów zamieszczono w poniższej tabeli.
+
+
+```{r, echo=F, message=F}
+kable(ankiety_lata, col.names = c('rok', 'liczba ankiet'))
+```
+
+Umownie rok `0` oznacza respondentów Pielęgniarstwa w ramach studiów pomostowych (PP).
+
+Zestawienie w podziale 
+na liczbę ankiet wg miejsca studiowania zamieszczono w poniższej tabeli.
+
+```{r, echo=F, message=F}
+kable(ankiety_miejsca, col.names = c('miejsce', 'liczba ankiet'))
+```
+
+
+```{r, echo=F, message=F}
+ankiety_prowadzacy <- d %>% group_by(wykladowca) %>% summarise (w = n())
+liczba_prowadzacych <- nrow(ankiety_prowadzacy)
+```
+
+W `r rokAkademicki`/`r semestr` na wydziale `r wydzial` oceniono 
+`r  liczba_prowadzacych` prowadzących zajęcia.
+
+```{r, echo=F, message=F}
+f <- d %>% pivot_longer( names_to =  "aspekt", values_to = "ocena", cols = o1:o10 )
+
+positive.rating <- c("Bardzo Dobrze", "Dobrze", "zdecydowanie się zgadzam", "zgadzam się", "uważam za interesujący",
+                     "uważam za bardzo interesujący")
+negative.rating <- c("Bardzo Źle", "Źle", "zdecydowanie się nie zgadzam", "nie zgadzam się", 
+                     "uważam za mało interesujący", "uważam za bardzo mało interesujący")
+
+f_rating <- f %>% mutate (positive = ocena %in% positive.rating,
+   negative = ocena %in% negative.rating )
+```
+
+
+## Zbiorcza ocena zajęć
+
+
+```{r, echo=F, message=F}
+## łączna ocena = procent odpowiedzi pozytywnych
+## grupowanie po cat/aspekt
+ft_aspekt <- f_rating %>%  mutate(cat = factor(aspekt)) %>%
+  group_by (cat) %>% summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+## wg typów zajęć
+ft_typ <- f_rating %>%  
+  group_by (typ) %>% summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+## wg lat łącznie
+ft_rok <- f_rating %>%  
+  group_by (rok) %>% summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+## wg kierunków łącznie
+ft_kierunek <- f_rating %>%  
+  group_by (kierunek) %>% summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+ft_rok_x <- f_rating %>%  mutate(cat = factor(aspekt)) %>%
+  group_by (rok, cat) %>% summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+ft_sex <- f_rating %>%  
+  group_by (płeć) %>% summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+## wykładowca łącznie
+ft_wykladowca <- f_rating %>%  
+  group_by (wykladowca) %>% summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+## wykładowca wg kryteriów
+ft_wykladowca_x <- f_rating %>%   mutate(cat = factor(aspekt)) %>%
+  group_by (wykladowca, cat) %>% 
+  summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+ft_miejsce <- f_rating %>% group_by (miejsce) %>% 
+  summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+ft_miejsce_x <- f_rating %>%   mutate(cat = factor(aspekt)) %>%
+  group_by (miejsce, cat) %>% 
+  summarise( pmean = sum(positive, na.rm=TRUE)/n() * 100)
+
+## Wykresy ##
+
+tit.m <- sprintf("Odsetek opinii pozytywnych wg kryteriów szczegółowych (%s)", rokAkademicki)
+stitle <- sprintf("N = %i (wydzial %s)", liczba_ankiet, wydzial);
+p.1 <- ggplot(ft_aspekt, aes(x = reorder(cat, pmean), y = pmean )) +
+    ggtitle(tit.m, subtitle=stitle) +
+    xlab("cat") + ylab("%") +
+    geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+    geom_text(data=ft_aspekt, aes(label=sprintf("%.1f", pmean), y= pmean), hjust=1.5, color="white" ) +
+    scale_x_discrete (breaks=var.names,  labels=var.labels) +
+    coord_flip()
+p.1
+
+tit.m <- sprintf("Odsetek opinii pozytywnych (łącznie) wg typu zajęć (%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.2 <- ggplot(ft_typ, aes(x = reorder(typ, pmean), y = pmean )) +
+  ggtitle(tit.m, subtitle=stitle) +
+  xlab("cat") + ylab("") +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=ft_typ, aes(label=sprintf("%.1f", pmean), y= pmean), hjust=1.5, color="white" ) +
+  #scale_x_discrete (breaks=var.names,  labels=var.labels) +
+  coord_flip()
+p.2
+
+tit.m <- sprintf("Odsetek opinii pozytywnych (łącznie) wg kierunku(%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.2.kier <- ggplot(ft_kierunek, aes(x = reorder(kierunek, pmean), y = pmean )) +
+  ggtitle(tit.m, subtitle=stitle) +
+  xlab("cat") + ylab("") +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=ft_kierunek, aes(label=sprintf("%.1f", pmean), y= pmean), hjust=1.5, color="white" ) +
+  #scale_x_discrete (breaks=var.names,  labels=var.labels) +
+  coord_flip()
+p.2.kier
+
+
+tit.m <- sprintf("Odsetek opinii pozytywnych (łącznie) wg lat studiów (%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.3 <- ggplot(ft_rok, aes(x = reorder(rok, pmean), y = pmean )) +
+  ggtitle(tit.m, subtitle=stitle) +
+  xlab("rok") + ylab("%") +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=ft_rok, aes(label=sprintf("%.1f", pmean), y= pmean), vjust=1.5, color="white" )
+  #scale_x_discrete (breaks=var.names,  labels=var.labels) +
+
+p.3
+
+tit.m <- sprintf("Odsetek opinii pozytywnych wg typu zajęć/lat studiów (%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.4 <- ggplot(ft_rok_x, aes(x = cat, y = pmean )) +
+  ggtitle(tit.m, subtitle=stitle) +
+  facet_wrap( ~ rok) +
+  xlab("") + ylab("") +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=ft_rok_x, aes(label=sprintf("%.1f", pmean), y= pmean), hjust=1.5, color="white" ) +
+  scale_x_discrete (breaks=var.names,  labels=var.labels) +
+  coord_flip()
+p.4
+
+tit.m <- sprintf("Odsetek opinii pozytywnych (łącznie) wg wykładowców (%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.5 <- ggplot(ft_wykladowca, aes(x = reorder(wykladowca, pmean) )) +
+  geom_point(aes(y = pmean, colour = "green"), size=1) +
+  xlab(label="") +
+  ylab(label="") +
+  ggtitle(tit.m, subtitle=stitle) +
+  theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(axis.text = element_text(size = 4)) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = "none") +
+  coord_flip()
+p.5
+
+tit.m <- sprintf("Odsetek opinii pozytywnych (łącznie) wg wykładowców/kryteriów (%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.6 <- ggplot(ft_wykladowca_x, aes(x = reorder(wykladowca, pmean) )) +
+  geom_point(aes(y = pmean, colour = "green"), size=1) +
+  facet_wrap( ~ cat, ncol = 2) +
+  xlab(label="") +
+  ylab(label="") +
+  ggtitle(tit.m, subtitle=stitle) +
+  theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(axis.text = element_text(size = 4)) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = "none") +
+  coord_flip()
+p.6
+
+tit.m <- sprintf("Odsetek opinii pozytywnych (łącznie) wg płci ankietowanego (%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.12 <- ggplot(ft_sex, aes(x = reorder(płeć, pmean), y = pmean )) +
+  ggtitle(tit.m, subtitle=stitle) +
+  xlab("cat") + ylab("") +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=ft_sex, aes(label=sprintf("%.1f", pmean), y= pmean), vjust=1.5, color="white" )
+  #scale_x_discrete (breaks=var.names,  labels=var.labels)
+p.12
+
+tit.m <- sprintf("Odsetek opinii pozytywnych (łącznie) wg siedziby (%s)", rokAkademicki)
+#stitle <- sprintf("N = %i", liczba_ankiet);
+p.13 <- ggplot(ft_miejsce, aes(x = reorder(miejsce, pmean), y = pmean )) +
+  ggtitle(tit.m, subtitle=stitle) +
+  xlab("cat") + ylab("") +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+geom_text(data=ft_miejsce, aes(label=sprintf("%.1f", pmean), y= pmean), vjust=1.5, color="white" )
+#scale_x_discrete (breaks=var.names,  labels=var.labels)
+p.13
+
+tit.m <- sprintf("Odsetek opinii pozytywnych wg siedziby/kryteriów (%s)", rokAkademicki)
+p.14 <- ggplot(ft_miejsce_x, aes(x = miejsce, y= pmean )) +
+  ##geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_point(aes(y = pmean, colour = cat), size=1.5) +
+  ##facet_wrap( ~ cat, ncol = 2) +
+  xlab(label="") +
+  ylab(label="") +
+  ggtitle(tit.m, subtitle=stitle) +
+  ##theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank()) +
+  theme(axis.text = element_text(size = 6)) +
+  theme(plot.title = element_text(hjust = 0.5))
+  ##theme(legend.position = "none")
+p.14
+
+```
+
+## Formularz ankiety oceny jakości zajęć
+
+1. Nazwa przedmiotu
+
+2. Imię i nazwisko wykładowcy
+
+3. Forma zajęć
+
+Proszę o ocenę zajęć pod względem następujących kryteriów
+(Odpowiedzi na pytania 4--12 w skali: **□ zdecydowanie się nie zgadzam □ nie zgadzam się 
+□ ani się zgadzam ani się nie zgadzam □ zgadzam się □ zdecydowanie się zgadzam**;
+pytanie 13 w skali: **uważam za bardzo mało interesujący □ uważam za mało interesujący 
+□ nie mam zdania □ uważam za interesujący □ uważam za bardzo interesujący**)
+
+4. Jak Pan/Pani ocenia sposób przedstawienia treści zajęć
+
+5. Jak Pan/Pani ocenia wykorzystanie czasu pracy
+
+6. Jak Pan/Pani ocenia przedstawienie warunków uzyskania zaliczenia
+
+7. Jak Pan/Pani ocenia kompetencje merytoryczne wykładowcy do prowadzenia zajęć
+
+8. Jak Pan/Pani ocenia postawę wykładowcy wobec studentów
+
+9. Jak Pan/Pani ocenia dostępność wykładowcy dla studentów
+
+10. W mojej opinii zajęcia poszerzyły moją wiedzę i umiejętności
+
+11. W mojej opinii zajęcia umożliwiły łączenie mojej
+  wiedzy i doświadczeń z nową wiedzą i umiejętnościami
+
+12. W mojej opinii zajęcia rozwinęły moje kompetencjie społeczne
+
+13. Czy uważa Pani/Pan przedmiot zajęć za interesujący i warty poznania
+czy raczej Pani/Pan bierze udział w zajęciach żeby uzyskać zaliczenie
+
+
+14. Rok studiów
+
+15. Tryb (stacjonarne/niestacjonarne)
+
+16. Kierunek
+
+17. Płeć
+
+18. Miejsce studiowania (Kwidzyn/Filia Gdańsk)
+

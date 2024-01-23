@@ -1,0 +1,284 @@
+---
+title: "Ocena studiowania na Wydziale Z-Nauk"
+subtitle: "Semestr 2022--2023/lato"
+author: "Komisja ds. jakości kształcenia"
+date: "01/01/2024"
+output:
+  html_document: default
+  pdf_document:
+    keep_tex: true
+    latex_engine: lualatex
+header-includes: \usepackage{custom}
+---
+
+```{r setup, include=F }
+##############
+##############
+plikCSV <- "szkola.csv"
+### numeru roku akademickiego
+rokAkademicki <- "2022-2023"
+### semestr
+semestr <- 'L'
+## Wydział
+wydzial <- 'Z-Nauk'
+#wydzial <- 'S-Nauk'
+## Lista kierunków
+kierunkiWydzialu <- c("PO", "POM", "PP", "RM" )
+#kierunkiWydzialu <- c("Ekonomia", "EKO")
+#############
+#############
+### Poniżej nie ruszać  ###
+knitr::opts_chunk$set(echo = F, message = F)
+library("tidyverse")
+library("knitr")
+library("ggplot2")
+
+s0 <- read.csv(plikCSV, sep = ';',  header=F, skip=1, na.string="NA", fileEncoding = "UTF-8",
+   col.names = c('plec', 'm.zamieszkania',
+'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10',
+'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20',
+'p21', 'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28', 'p29', 'p30',
+'p31', 'p32', 'p33', 'p34', 'p35', 'p36',
+'uwagi', 'kierunek', 'rok', 'miejsce', 'uwagi.x')) %>%
+  select (-one_of('uwagi', 'uwagi.x' )) %>%
+  mutate (
+     ##miejsce = case_when (gdansk == "Tak" ~ "Gdańsk", kwidzyn == "Tak" ~ "Kwidzyn" ),
+          aktywny = case_when (p35 == "Tak" ~ "Tak", p36 == "Tak" ~ "Tak", TRUE ~ "Nie" ),
+          wydzial = case_when(kierunek == "Ekonomia" ~ "E", kierunek == "EKO" ~ "E", TRUE ~ "Z")
+          ) %>%
+filter(kierunek %in% kierunkiWydzialu)
+
+totalN <- nrow(s0)
+
+## opis ankiety
+a0 <- read.csv("a.csv", sep = ';',  header=T, na.string="NA", fileEncoding = "UTF-8")
+
+s1 <- s0 %>% pivot_longer(names_to = 'q', cols=c('p1', 
+    'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10',
+    'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20',
+    'p21', 'p23', 'p24', 'p26', 'p27', 'p28', 'p29', 'p30',
+    'p31', 'p32', 'p33', 'p34' ), values_to = 'v' )
+
+##levels(as.factor(s1$v))
+##levels(as.factor(s1$kierunek))
+
+##
+## Funkcje
+## drukuj wykres słupkowy z ramki d dla kolumny p, o tytule q
+drawBGrp <- function(d, p, q, rot=F) {
+  
+  df <- d %>%
+    select ( {{ p }} ) %>%
+    group_by( {{ p }} )%>%
+    summarize(n=n())%>%
+    mutate(prop=n/sum(n) * 100 )
+  
+  p.p2 <- df %>%
+    ggplot(aes(x = {{ p }}, y = prop )) +
+    ggtitle(q) +
+    xlab("") + ylab("%") +
+    geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue")
+    
+  
+  if (rot) {
+    p.p2 <- p.p2 + coord_flip() +
+      geom_text(data=df, aes(label=sprintf("%.2f", prop), y= prop), hjust=1.25, color="white" ) 
+  } else {
+    p.p2 <- p.p2 + 
+      geom_text(data=df, aes(label=sprintf("%.2f", prop), y= prop), vjust=1.5, color="white" ) 
+  }
+  
+  p.p2
+}
+
+#
+# Drukuje wykres punktowy
+# dla ramki d, kolumny p spełniającej warunek k
+# t, subt, l = tytuł, subtytuł, legenda
+drawMDots <- function(d, p, k, t, subt="", l="") {
+s1.2 <- d %>%
+  select ({{p}}, q, v) %>%
+  group_by({{p}}, q)%>%
+  summarize(n=sum(v %in% k ), prop = n/n() * 100) %>%
+  ungroup() %>%
+  left_join(a0, by=c('q'='nr'))
+
+p.p3 <- s1.2 %>%
+  ggplot(aes(x = reorder(pytanie, prop), y = prop, color = as.factor( {{p}} ) )) +
+  ggtitle(t, subtitle=subt ) +
+  xlab("") + ylab("%") + labs(color=l) + 
+  theme(axis.text = element_text(size = 6)) +
+  geom_point() +
+  coord_flip()
+p.p3
+}
+```
+
+## Opis procedury zbierania i analizy danych
+
+Ankieta oceniająca jakość studiowania w PSW jest udostępniana
+studentom w systemie Wirtualny Dziekanat. Analiza statystyczna
+jest wykonywana za pomocą autorskiego programu (w języku R) stworzonego
+przez członków zespołu d/s analizy jakości.
+**Dzięki zautomatyzowaniu przetwarzania danych (w miejsce używania do tego
+celu oprogramowania biurowego) udało się znacząco obniżyć
+koszty, zmniejszyć liczbę błędów oraz zapewnić 100% powtarzalność analiz**.
+
+Na wszystkie pytania oceniające różne aspekty jakości studiowana 
+w PSW studenci odpowiadali w skali pięciopunktowej
+  □ Bardzo źle □ Źle □ Nie mam zdania/Nie wiem □ Dobrze □ Bardzo dobrze
+
+Formularz ankiety znajduje się w Załączniku.
+
+
+## Charakterestyka badanych respondentów
+
+Analizowano `r totalN` ankiet.
+
+
+```{r, echo=FALSE, fig.width=8}
+##drawBGrp(s1, kierunek, 'Respondenci wg kierunku studiów', rot=T)
+
+drawBGrp(s1, rok, 'Respondenci wg roku studiów', rot=T)
+
+##drawBGrp(s1, miejsce, 'Respondenci wg miejsce studiowania', rot=T)
+```
+
+Deklarowana aktywność studenta w czasie studiów była ustalona w oparciu
+o jego odpowiedzi na pytania: **Brałem udział w programie Erasmus** oraz
+**Brałem udział w aktywności Samorządu Studenckiego/kół naukowych lub imprezach organizowanych przez Samorząd Studencki (juwenalia/otrzęsiny)** Aktywny to taki respondent, który
+chociaż na jedno pytanie udzielił odpowiedzi twierdzącej.
+
+```{r, echo=FALSE, fig.width=8}
+drawBGrp(s1, aktywny, 'Respondenci wg deklarowanej aktywności w czasie studiów', rot=T)
+```
+
+
+```{r, echo=FALSE, fig.width=8}
+drawBGrp(s1, plec, 'Respondenci wg płci')
+```
+
+## Ocena PSW
+
+Miarą oceny jest odsetek wskazań (pozytywnych/negatywnych/obojętnych)
+
+### Oceny pozytywne
+
+Miarą ocen pozytywnych jest odsetek wskazań **bardzo dobrze**
+
+```{r, fig.width=8}
+s1.1 <- s1 %>%
+  select (q, v) %>%
+  group_by(q)%>%
+  ## Conditional row count
+  ## v == "Bardzo Dobrze" 
+  summarize(n=sum(v == "Bardzo Dobrze" ), prop = n/n() * 100) %>%
+  left_join(a0, by=c('q'='nr'))
+
+p.p1 <- s1.1 %>%
+  ggplot(aes(x = reorder(pytanie, prop), y = prop )) +
+  ggtitle("Ocena U: odsetek ocen pozytywnych") +
+  xlab("") + ylab("%") +
+  theme(axis.text = element_text(size = 6)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=s1.1, aes(label=sprintf("%.2f", prop), y= prop), hjust=1.25, 
+            size =3, color="white" ) +
+  coord_flip()
+p.p1
+
+
+##title <- "Ocena PSW wg miejsca studiowania"
+##drawMDots(s1, miejsce, c('Bardzo Dobrze'), title, subt="wskazania pozytywne", l='Miejsce')
+
+title <- "Ocena PSW wg aktywności"
+drawMDots(s1, aktywny, c('Bardzo Dobrze'), title, subt="wskazania pozytywne", l="Aktywność")
+
+title <- "Ocena PSW wg roku studiów"
+drawMDots(s1, rok, c('Bardzo Dobrze'), title, subt="wskazania pozytywne", l="Rok")
+
+##title <- "Ocena PSW wg wydziału"
+##drawMDots(s1, wydzial, c('Bardzo Dobrze'), title, subt="wskazania pozytywne", l="Wydział")
+```
+
+### Oceny negatywne
+
+Miarą ocen negatywnych jest odsetek wskazań **Bardzo źle**/**Źle**
+
+```{r, fig.width=8}
+s1.2 <- s1 %>%
+  ##filter (v == 'Bardzo Źle' | v == 'Źle') %>%
+  select (q, v) %>%
+  group_by(q)%>%
+  summarize(n=sum(v == "Bardzo Żle" | v == 'Źle'),
+            prop = n/n() * 100) %>%
+  left_join(a0, by=c('q'='nr'))
+
+
+p.p2 <- s1.2 %>%
+  ggplot(aes(x = reorder(pytanie, prop), y = prop )) +
+  ggtitle("Ocena PSW: odsetek ocen negatywnych") +
+  xlab("") + ylab("%") +
+  theme(axis.text = element_text(size = 6)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=s1.2, aes(label=sprintf("%.2f", prop), y= prop), hjust=1.25, 
+            size =3, color="black" ) +
+  coord_flip()
+p.p2
+
+
+##title <- "Ocena PSW wg miejsca studiowania"
+##drawMDots(s1, miejsce, c('Bardzo Źle', 'Źle'), title, subt="wskazania negatywne", l='Miejsce')
+
+title <- "Ocena PSW wg aktywności"
+drawMDots(s1, aktywny, c('Bardzo Źle', 'Źle'), title, subt="wskazania negatywne", l="Aktywność")
+
+title <- "Ocena PSW wg roku studiów"
+drawMDots(s1, rok, c('Bardzo Źle', 'Źle'), title, subt="wskazania negatywne", l="Rok")
+
+##title <- "Ocena PSW wg wydziału"
+##drawMDots(s1, wydzial, c('Bardzo Źle', 'Źle'), title, subt="wskazania negatywne", l="Wydział")
+```
+
+### Nie mam zdania
+
+**Nie mam zdania/Nie wiem** może wskazywać na problem małego zaangażowania
+studentów w określonym obszarze.
+
+```{r, fig.width=8}
+s1.3 <- s1 %>%
+  select (q, v) %>%
+  group_by(q)%>%
+  summarize(n=sum(v == "Nie mam zdania/Nie wiem "),
+            prop = n/n() * 100) %>%
+  left_join(a0, by=c('q'='nr'))
+
+p.p3 <- s1.3 %>%
+  ggplot(aes(x = reorder(pytanie, prop), y = prop )) +
+  ggtitle("Ocena PSW: odsetek ocen nie wiem") +
+  xlab("") + ylab("%") +
+  theme(axis.text = element_text(size = 6)) +
+  geom_bar(position = 'dodge', stat = 'identity', fill = "steelblue") +
+  geom_text(data=s1.3, aes(label=sprintf("%.2f", prop), y= prop), hjust=1.25, 
+            size =3, color="white" ) +
+  coord_flip()
+p.p3
+
+##title <- "Ocena PSW wg miejsca studiowania"
+##drawMDots(s1, miejsce, c('Nie mam zdania/Nie wiem '), title, subt="wskazania nie wiem", l='Miejsce')
+
+title <- "Ocena PSW wg aktywności"
+drawMDots(s1, aktywny, c('Nie mam zdania/Nie wiem '), title, subt="wskazania nie wiem", l="Aktywność")
+
+title <- "Ocena PSW wg roku studiów"
+drawMDots(s1, rok, c('Nie mam zdania/Nie wiem '), title, subt="wskazania nie wiem", l="Rok")
+
+##title <- "Ocena PSW wg wydziału"
+##drawMDots(s1, wydzial, c('Nie mam zdania/Nie wiem '), title, subt="wskazania nie wiem", l="Wydział")
+
+```
+
+## Ankieta
+
+```{r}
+kable(a0, col.names = c("nr", "skrót", 'pytanie'))
+```

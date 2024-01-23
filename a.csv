@@ -1,0 +1,37 @@
+nr;pytanie;pytanie.full
+p1;Oferta przedmiotów;Jak Pan/Pani ocenia ofertę przedmiotów (zakres i treść)
+p2;Oferta specjalności;Jak Pan/Pani ocenia ofertę specjalności (zakres)
+p3;Oferta przedmiotów fakultatywnych;Jak Pan/Pani ocenia ofertę przedmiotów fakultatywnych (zakres i treść)
+p4;Informacja nt studiów/spraw dydaktycznych;Jak Pan/Pani ocenia dostępność i przejrzystości informacji dotyczących programów studiów i spraw dydaktycznych
+p5;Informacja nt regulaminów;Jak Pan/Pani ocenia dostępność informacji dotyczącej regulaminów (studiów, pomocy materialnej, innych), programów kształcenia, wymagań egzaminacyjnych oraz zasad pobierania opłat
+p6;Oferta nauki języków obcych;Jak Pan/Pani ocenia ofertę nauki języków obcych (zakres i stopień zaawansowania)							 
+p7;Oferta studiów za granicą;Jak Pan/Pani ocenia ofertę studiów za granicą wramach programu Erasmus								 
+p8;Warunki lokalowe;Jak Pan/Pani ocenia ogólne warunków lokalowe											 
+p9;Wyposażenie sal;Jak Pan/Pani ocenia wyposażenia sal wspomagających proces kształcenia (audiowizualne, tablice itp.)					 
+p10;Baza komputerowej;Jak Pan/Pani ocenia  bazę komputerową												 
+p11;Liczebność grup studenckich;Jak Pan/Pani ocenia liczebności grup studenckich waktywnych formach zajęć (ćwiczenia/laboratoria)					 
+p12;Organizacja rozkładu zajęć;Jak Pan/Pani ocenia racjonalność i organizację rozkładu zajęć									 
+p13;Dostęp do czytelni;Jak Pan/Pani ocenia dostęp do wypożyczalni/czytelni idostępnych w niej zbiorów							 
+p14;Sprecyzowanie wymagań KP;Jak Pan/Pani ocenia  sprecyzowanie wymagań dotyczących wykonywanych zadań i zaliczania umiejętności podczas kształcenia praktycznego 
+p15;Organizacja KP;Jak Pan/Pani ocenia organizację kształcenia praktycznego (dobór placówek, kadry)							 
+p16;Zbieżność KP/WUZ;Jak Pan/Pani ocenia zbieżność czynności  wykonywanych podczas kształcenia praktycznego zprogramem wymaganych umiejętności zawodowych 
+p17;Dostępność dziekanatu;Jak Pan/Pani ocenia dostępność dziekanatu												 
+p18;Życzliwości pracowników dziekanatu;Jak Pan/Pani ocenia życzliwości/otwartość/chęć pomocy pracowników dziekanatu							 
+p19;Terminowości pracy dziekanatu;Jak Pan/Pani ocenia pracę dziekanatu pod względem terminowości załatwiania spraw/kompetencji					 
+p20;Funkcjonalność e-dziekanatu;Jak jest Pana/Pani ocenia funkcjonalność e-dziekanatu										 
+p21;Terminowości pracy e-dziekanatu;Jak Pan/Pani ocenia pracę e-dziekanatu pod względem terminowości załatwiania spraw							 
+p22;Czego brakuje/co by należałby usprawnić w pracy e-dziekanatu:;Proszę określić czego brakuje/co by należałby usprawnić w pracy e-dziekanatu:  							 
+p23;Estetyka strony internetowej;Jak jest Pana/Pani ocena estetyki uczelnianej strony internetowej									 
+p24;Funkcjonalności strony internetowej;Jak jest Pana/Pani ocena funkcjonalności uczelnianej strony internetowej oraz  aktualności/kompletności insformacji na tej stronie
+p25;Co by należało poprawić na uczelnianej stronie internetowej?;Proszę określić czego brakuje/co by należało poprawić na uczelnianej stronie internetowej: 						 
+p26;Ocena dostępności kwestury;Jak Pan/Pani ocenia dostępność kwestury
+p27;Życzliwość pracowników kwestury;Jak Pan/Pani ocenia życzliwości/otwartość/chęć pomocy pracowników kwestury								       
+p28;Terminowość pracy kwestury;Jak Pan/Pani ocenia pracę kwestury pod względem terminowości załatwiania spraw/kompetencji 						       
+p29;Dostępność punktu informacyjnego;Jak Pan/Pani ocenia dostępność punktu informacyjnego 										       
+p30;Życzliwość pracowników punktu informacyjnego;Jak Pan/Pani ocenia życzliwości/otwartość/chęć pomocy pracowników punktu informacyjnego						       
+p31;Kompetencje punktu informacyjnego;Jak Pan/Pani ocenia pracę punktu informacyjnego pod względem kompetencji								       
+p32;Działalność Komisji Stypendialnej;Jak Pan/Pani ocenia działalność Uczelnianej Komisji Stypendialnej 									       
+p33;Działalność Samorządu Studenckiego;Jak Pan/Pani ocenia działalność Samorządu Studenckiego 										       
+p34;Działalność Studenckich Kół Naukowych;Jak Pan/Pani ocenia działalność Studenckich Kół Naukowych 										       
+p35;Brałem udział w programie Erasmus;Brałem udział wprogramie Erasmus													       
+p36;Brałem udział w aktywności Studenckiej;Brałem udział w aktywności Samorządu Studenckiego/kół naukowych lub imprezach organizowanych przez Samorząd Studencki (juwenalia/otrzęsiny)
